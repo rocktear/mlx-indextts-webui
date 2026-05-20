@@ -52,7 +52,7 @@ const examples = [
     { text: '这真是令人厌恶，我无法接受。', emotion: 'disgusted 厌恶', alpha: 0.7, tokens: 1500, speed: 1.0 },
     { text: '一切都显得那么沉闷和无趣。', emotion: 'melancholic 忧郁', alpha: 0.6, tokens: 1500, speed: 1.0 },
     { text: '哇！这真是太惊人了！', emotion: 'surprised 惊讶', alpha: 0.7, tokens: 1500, speed: 1.0 },
-    { text: '我有点开心，又有点紧张，这种感觉很奇妙。', emotion: '🎨 mixed', alpha: 0.6, tokens: 1500, speed: 1.0, custom: 'happy:0.6,surprised:0.4' },
+    { text: '我有点开心，又有点紧张，这种感觉很奇妙。', emotion: 'mixed 混合情绪', alpha: 0.6, tokens: 1500, speed: 1.0, custom: 'happy:0.6,surprised:0.4' },
 ];
 
 const examplesGrid = $('#examples-grid');

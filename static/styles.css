@@ -290,7 +290,7 @@ section {
 /* Examples */
 #examples-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 
@@ -301,6 +301,10 @@ section {
     padding: 10px;
     cursor: pointer;
     transition: border-color 0.2s;
+}
+
+.example-card:last-child:nth-child(9) {
+    grid-column: 1 / -1;
 }
 
 .example-card:hover { border-color: var(--accent); }
