@@ -149,5 +149,5 @@ Includes copyright notice from upstream `solar2ain/mlx-indextts`.
 ---
 
 <p align="center">
-  <sub>Crafted with ❤️ by human + AI · 2026.05.20</sub>
+  <sub>Crafted with ❤️ — U&I · 2026.05.20</sub>
 </p>
