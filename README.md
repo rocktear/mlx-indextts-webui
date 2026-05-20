@@ -1,197 +1,153 @@
-# MLX-IndexTTS
+# 🎙️ IndexTTS2 WebUI
 
-IndexTTS for Apple Silicon using MLX. Zero-shot text-to-speech with voice cloning capabilities.
+> **FastAPI-powered WebUI for IndexTTS2 on Apple Silicon.**
+> Beautiful dark theme, 8 emotion controls, custom reference audio upload, one-click NPZ speaker export.
+> No Electron. No Gradio bloat. Just a browser.
 
-## Features
+<p align="center">
+  <img src="https://raw.githubusercontent.com/rocktear/mlx-indextts-webui/main/screenshots/webui.png" alt="IndexTTS2 WebUI Screenshot" width="800">
+</p>
 
-- Run IndexTTS 1.5/2.0 natively on Apple Silicon
-- RTF ~0.5 (2x faster than real-time on M2 Max)
-- Voice cloning from reference audio
-- **v2.0**: Emotion control (8 emotions)
-- Auto-detect model version (1.5/2.0)
+---
 
-## Requirements
+## ✨ Features
 
-- macOS with Apple Silicon (M1/M2/M3/M4)
-- Python 3.10+
-- [uv](https://docs.astral.sh/uv/) package manager
+| Feature | Detail |
+|---------|--------|
+| 🎤 **Custom reference audio** | Upload `.wav` / `.mp3` / `.m4a` / `.npz` directly in the browser |
+| 😊 **8 emotion controls** | calm, happy, sad, angry, afraid, disgusted, melancholic, surprised — with mixed emotions support |
+| 💪 **Emotion intensity** | Slider 0.0–1.0 for precise control |
+| ⚙️ **All generation params** | Duration (tokens), speed, temperature, Top P — all adjustable |
+| 💾 **One-click NPZ export** | Save your curated voice as `.npz` for fast reuse — no manual CLI |
+| 🌙 **Dark theme** | GitHub-style dark UI with blue accent |
+| 🇨🇳 **Chinese + English** | Bilingual labels, emotion translation, beginner-friendly |
+| ⚡ **Zero-load startup** | FastAPI starts in <1s — model is loaded per-request and released immediately |
+| 📊 **Status panel** | Real-time parameter display + generation status |
 
-## Installation
+---
+
+## 📦 Architecture
+
+```
+FastAPI (server.py, port 7861)
+├── GET  /health                     → Health check (no model)
+├── POST /api/v1/generate            → TTS generation (load → generate → release)
+├── POST /api/v1/extract-speaker     → NPZ speaker extraction
+└── GET  /                           → Static WebUI (hand-written HTML/CSS/JS)
+```
+
+**Key design choice**: The model is loaded **on-demand** per API request and released after — it never sits in memory. This keeps ~6-8GB free for other MLX workloads.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install & Download Model
 
 ```bash
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Clone and install
-git clone https://github.com/user/mlx-indextts.git
+git clone https://github.com/solar2ain/mlx-indextts.git
 cd mlx-indextts
 
-# Basic install (generation only)
-uv sync
+# Install dependencies (includes einops)
+uv sync --extra v2
+uv add einops
 
-# With model conversion support (requires torch)
-uv sync --extra convert
+# Download the quantized model (~2.8GB)
+hf download vanch007/mlx-indextts2-standard-8bit \
+  --local-dir ~/.cache/indextts2/mlx-indextts2-standard-8bit
 ```
 
-## Quick Start
-
-### 1. Convert Model (auto-detects version)
+### 2. (Optional) Pre-compute a default voice
 
 ```bash
-# Convert IndexTTS 1.5
-uv run mlx-indextts convert \
-    --model-dir /path/to/indexTTS-1.5 \
-    -o models/mlx-indexTTS-1.5
-
-# Convert IndexTTS 2.0
-uv run mlx-indextts convert \
-    --model-dir /path/to/indexTTS-2 \
-    -o models/mlx-indexTTS-2.0
-```
-
-### 2. Generate Speech (auto-detects version)
-
-```bash
-# v1.5
-uv run mlx-indextts generate \
-    -m models/mlx-indexTTS-1.5 \
-    -r reference.wav \
-    -t "你好，这是一个语音合成测试。" \
-    -o output.wav
-
-# v2.0
-uv run mlx-indextts generate \
-    -m models/mlx-indexTTS-2.0 \
-    -r reference.wav \
-    -t "你好，这是一个语音合成测试。" \
-    -o output.wav
-
-# v2.0 with emotion control
-uv run mlx-indextts generate \
-    -m models/mlx-indexTTS-2.0 \
-    -r reference.wav \
-    -t "今天真是太开心了！" \
-    -o output.wav \
-    --emotion happy --emo-alpha 0.6
-```
-
-### 3. Pre-compute Speaker (Faster Inference)
-
-Pre-compute speaker conditioning to skip audio preprocessing on subsequent generations.
-
-```bash
-# v1.5
 uv run mlx-indextts speaker \
-    -m models/mlx-indexTTS-1.5 \
-    -r reference.wav \
-    -o speaker_v15.npz
-
-# v2.0
-uv run mlx-indextts speaker \
-    -m models/mlx-indexTTS-2.0 \
-    -r reference.wav \
-    -o speaker_v20.npz
-
-# Use pre-computed speaker (much faster loading)
-uv run mlx-indextts generate \
-    -m models/mlx-indexTTS-2.0 \
-    -r speaker_v20.npz \
-    -t "你好，世界！" \
-    -o output.wav
+  -m ~/.cache/indextts2/mlx-indextts2-standard-8bit \
+  -r your_voice.wav \
+  -o ~/.cache/indextts2/snowball_voice.npz
 ```
 
-**Note**: v1.5 and v2.0 speaker files are incompatible - each version requires its own .npz file.
+### 3. Launch WebUI
 
-## Python API
-
-```python
-# v1.5
-from mlx_indextts.generate import IndexTTS
-
-tts = IndexTTS.load_model("models/mlx-indexTTS-1.5")
-audio = tts.generate(text="你好", ref_audio="reference.wav")
-tts.save_audio(audio, "output.wav")
-
-# v2.0
-from mlx_indextts.generate_v2 import IndexTTSv2
-
-tts = IndexTTSv2("models/mlx-indexTTS-2.0")
-audio = tts.generate(
-    text="你好",
-    reference_audio="reference.wav",
-    output_path="output.wav",
-    emotion="happy",
-    emo_alpha=0.6,
-)
+```bash
+uv run python server.py
+# → Open http://localhost:7861
 ```
 
-## CLI Options
+**Service management script** (optional):
 
-```
-mlx-indextts generate [OPTIONS]
+```bash
+# Copy the helper script
+cp scripts/indextts-webui ~/.hermes/scripts/
+chmod +x ~/.hermes/scripts/indextts-webui
 
-Required:
-  -m, --model        Model directory
-  -r, --ref-audio    Reference audio (.wav or .npz)
-  -t, --text         Text to synthesize
-  -o, --output       Output file
-
-Common options:
-  --max-tokens       Max mel tokens (default: 800 for v1.5, 1500 for v2.0)
-  --temperature      Sampling temperature (default: 1.0 for v1.5, 0.8 for v2.0)
-  --seed, -s         Random seed for reproducibility
-  -v, --verbose      Verbose output
-  -p, --play         Play audio after generation
-  --quantize, -q     Runtime quantization: 4, 8, or fp32
-
-v2.0 only:
-  --emotion          Emotion: happy/sad/angry/afraid/disgusted/melancholic/surprised/calm
-  --emo-alpha        Emotion intensity 0.0-1.0 (default: 0.6, recommend ≤ 0.8)
-  --diffusion-steps  Diffusion steps (default: 25)
-  --cfg-rate         CFG rate (default: 0.7)
+# Start / Stop / Status
+idx start
+idx stop
+idx status
 ```
 
-## Version Comparison
+---
 
-| Feature | v1.5 | v2.0 |
-|---------|------|------|
-| Sample rate | 24000 Hz | 22050 Hz |
-| Max tokens | 800 | 1815 |
-| Default temperature | 1.0 | 0.8 |
-| Emotion control | ❌ | ✅ 8 emotions |
-| S2Mel (CFM) | ❌ | ✅ |
-| BigVGAN | Custom | nvidia pretrained |
-| Runtime quantization | ✅ | ✅ |
-| Speaker pre-compute | ✅ | ✅ |
+## 🎯 Workflow
 
-## Supported Emotions (v2.0)
+```
+1. Type text → 2. Tune emotion + params → 3. Click "🎵 点击生成音频"
+                                           ↓
+4. Listen → 5. Iterate until satisfied → 6. Click "💾 保存为 NPZ"
+                                           ↓
+                                    .npz saved! (fast loading next time)
+```
 
-| English | 中文 |
-|---------|------|
-| happy | 高兴 |
-| angry | 愤怒 |
-| sad | 悲伤 |
-| afraid | 恐惧 |
-| disgusted | 反感 |
-| melancholic | 低落 |
-| surprised | 惊讶 |
-| calm | 自然 |
+---
 
-Mixed emotions: `--emotion "happy:0.6,sad:0.4"`
+## 🖼️ Screenshots
 
-## Performance
+*(Add your screenshots to the `screenshots/` directory)*
 
-| Metric | v1.5 | v2.0 |
-|--------|------|------|
-| RTF (M2 Max) | ~0.5 | ~1.3 |
-| Load time (.wav) | ~0.3s | ~9s |
-| Load time (.npz) | ~0.3s | ~1.5s |
+```
+screenshots/
+├── webui.png          # Full WebUI
+├── generating.png     # During generation
+└── npz-saved.png      # NPZ download complete
+```
 
-## License
+---
 
-MIT License
+## 📂 File Structure (added files)
 
-## Acknowledgments
+```
+mlx-indextts/
+├── server.py          # FastAPI backend (218 lines)
+├── static/
+│   ├── index.html     # Hand-written HTML (99 lines)
+│   ├── styles.css     # Dark theme CSS (302 lines)
+│   └── script.js      # Frontend logic (189 lines)
+├── webui.py           # Legacy Gradio version (202 lines)
+├── scripts/
+│   └── indextts-webui # Service management script
+└── .gitignore
+```
 
-- [IndexTTS](https://github.com/index-tts/index-tts) - Original PyTorch implementation
-- [MLX](https://github.com/ml-explore/mlx) - Apple's ML framework
+---
+
+## 🙏 Credits
+
+**Built on top of [solar2ain/mlx-indextts](https://github.com/solar2ain/mlx-indextts)** — the incredible MLX port of IndexTTS for Apple Silicon.
+
+- **Upstream**: [solar2ain/mlx-indextts](https://github.com/solar2ain/mlx-indextts) (MIT License)
+- **Original IndexTTS**: by ByteDance/Didi
+- **WebUI design & implementation**: [@rocktear](https://github.com/rocktear) + AI pair programming
+- **Created on**: May 20, 2026 — a special day ❤️
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+Includes copyright notice from upstream `solar2ain/mlx-indextts`.
+
+---
+
+<p align="center">
+  <sub>Crafted with ❤️ by human + AI · 2026.05.20</sub>
+</p>
