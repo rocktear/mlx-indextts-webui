@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexTTS2 声音克隆</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main>
+        <h1>🎙️ IndexTTS2 声音克隆</h1>
+
+        <section id="section-text">
+            <h2>📝 文本</h2>
+            <textarea id="text-input" rows="6" placeholder="请输入要合成的文本..."></textarea>
+        </section>
+
+        <section id="section-controls">
+            <div id="emotion-panel">
+                <h2>😊 情绪控制</h2>
+                <select id="emotion-select">
+                    <option value="calm 平静">calm 平静</option>
+                    <option value="happy 高兴">happy 高兴</option>
+                    <option value="sad 伤心">sad 伤心</option>
+                    <option value="angry 愤怒">angry 愤怒</option>
+                    <option value="afraid 害怕">afraid 害怕</option>
+                    <option value="disgusted 厌恶">disgusted 厌恶</option>
+                    <option value="melancholic 忧郁">melancholic 忧郁</option>
+                    <option value="surprised 惊讶">surprised 惊讶</option>
+                    <option value="__custom__">🎨 混合情绪…</option>
+                </select>
+                <input type="text" id="emotion-custom" class="hidden" placeholder="e.g. happy:0.6,sad:0.4">
+                <div class="slider-group">
+                    <label>💪 强度</label>
+                    <input type="range" id="emo-alpha" min="0" max="1" step="0.05" value="0.6">
+                    <span id="emo-alpha-val">0.6</span>
+                </div>
+            </div>
+            <div id="params-panel">
+                <h2>⚙️ 生成参数</h2>
+                <div class="param-grid">
+                    <div class="slider-group"><label>⏱️ 时长</label><input type="range" id="max-tokens" min="500" max="3000" step="100" value="1500"><span id="max-tokens-val">1500</span></div>
+                    <div class="slider-group"><label>🚀 语速</label><input type="range" id="speed" min="0.5" max="2" step="0.1" value="1"><span id="speed-val">1x</span></div>
+                    <div class="slider-group"><label>🎲 Temp</label><input type="range" id="temperature" min="0.1" max="2" step="0.1" value="0.8"><span id="temperature-val">0.8</span></div>
+                    <div class="slider-group"><label>📊 TopP</label><input type="range" id="top-p" min="0" max="1" step="0.05" value="0.8"><span id="top-p-val">0.8</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-output">
+            <h2>🔊 输出</h2>
+            <audio id="audio-player" controls></audio>
+            <div id="output-actions">
+                <button id="save-npz-btn" disabled title="生成音频后可保存为 NPZ">💾 保存为 NPZ</button>
+                <span id="save-npz-status"></span>
+            </div>
+            <div id="progress-bar" class="hidden">
+                <div id="progress-fill"></div>
+                <span id="progress-text">生成中…</span>
+            </div>
+        </section>
+
+        <section id="section-bottom">
+            <div id="input-audio-panel">
+                <h2>🎤 输入</h2>
+                <div id="ref-box">
+                    <input type="file" id="ref-audio-file" accept=".wav,.mp3,.m4a,.npz">
+                    <label for="ref-audio-file" id="ref-audio-label">点击或拖拽上传参考音频</label>
+                    <p id="ref-audio-name"></p>
+                </div>
+            </div>
+            <div id="status-panel">
+                <h2>📊 状态</h2>
+                <div id="status-box">
+                    <p id="status-text">准备就绪</p>
+                    <table id="params-table">
+                        <tr><td>情绪</td><td id="param-emotion">-</td></tr>
+                        <tr><td>强度</td><td id="param-alpha">-</td></tr>
+                        <tr><td>时长</td><td id="param-tokens">-</td></tr>
+                        <tr><td>语速</td><td id="param-speed">-</td></tr>
+                        <tr><td>Temp</td><td id="param-temp">-</td></tr>
+                        <tr><td>TopP</td><td id="param-topp">-</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div id="generate-panel">
+                <h2>🎵 生成</h2>
+                <div id="generate-box">
+                    <button id="generate-btn">🎵 点击生成音频</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-examples">
+            <h2>💡 示例</h2>
+            <div id="examples-grid"></div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

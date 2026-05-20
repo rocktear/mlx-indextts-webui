@@ -1,0 +1,228 @@
+#!/bin/bash
+# IndexTTS2 WebUI 服务管理脚本
+# 用法: idx start / idx stop / idx status / idx clean / idx logs / idx restart
+
+set -e
+
+# 配置
+PROJECT_DIR="$HOME/mlx-indextts"
+PID_FILE="$HOME/.hermes/run/indextts-webui.pid"
+LOG_FILE="$HOME/.hermes/logs/indextts-webui.log"
+PORT=7861
+MAX_WAIT=90  # 最长等待 90 秒
+
+# 确保目录存在
+mkdir -p "$(dirname "$PID_FILE")"
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# 颜色
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# 获取真实 Python PID（处理 uv run 嵌套）
+get_real_pid() {
+    local shell_pid=$1
+    sleep 0.5
+    # 找到 server.py 的 Python 进程，取第一条
+    pgrep -f "[p]ython.*server.py" 2>/dev/null | head -1
+}
+
+get_pid() {
+    if [ -f "$PID_FILE" ]; then
+        cat "$PID_FILE"
+    fi
+}
+
+is_running() {
+    local pid=$1
+    [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+cleanup_orphans() {
+    echo "🧹 清理孤儿进程..."
+    local count=0
+    while IFS= read -r pid; do
+        if [ -n "$pid" ]; then
+            echo "  杀死孤儿进程: $pid"
+            kill -9 "$pid" 2>/dev/null || true
+            count=$((count + 1))
+        fi
+    done < <(pgrep -f "[p]ython.*server.py" || true)
+    
+    # 清理端口占用
+    local port_pid
+    port_pid=$(lsof -ti ":$PORT" 2>/dev/null || true)
+    if [ -n "$port_pid" ]; then
+        echo "  释放端口 $PORT (PID: $port_pid)"
+        kill -9 $port_pid 2>/dev/null || true
+        count=$((count + 1))
+    fi
+    
+    if [ $count -gt 0 ]; then
+        echo "✅ 清理了 $count 个进程"
+    else
+        echo "✅ 没有孤儿进程"
+    fi
+}
+
+cmd_start() {
+    echo "🚀 启动 IndexTTS2 WebUI..."
+    
+    # 先彻底清理
+    cleanup_orphans
+    
+    # 检查是否已运行
+    local pid=$(get_pid)
+    if [ -n "$pid" ] && is_running "$pid"; then
+        echo -e "${YELLOW}⚠️  服务已在运行 (PID: $pid)${NC}"
+        return 0
+    fi
+    
+    # 清理旧 PID 文件
+    rm -f "$PID_FILE"
+    
+    # 启动服务
+    cd "$PROJECT_DIR"
+    uv run python server.py > "$LOG_FILE" 2>&1 &
+    local shell_pid=$!
+    
+    # 等待 Python 进程启动
+    sleep 2
+    
+    # 获取真实 PID
+    local real_pid=$(get_real_pid "$shell_pid")
+    if [ -z "$real_pid" ]; then
+        echo -e "${YELLOW}⚠️  等待 Python 进程...${NC}"
+        sleep 3
+        real_pid=$(get_real_pid "$shell_pid")
+    fi
+    
+    if [ -z "$real_pid" ]; then
+        echo -e "${RED}❌ 无法获取 Python PID${NC}"
+        return 1
+    fi
+    
+    echo "$real_pid" > "$PID_FILE"
+    echo "  进程 PID: $real_pid"
+    
+    # 等待服务就绪（健康检查）
+    echo "  等待服务就绪..."
+    local waited=0
+    while [ $waited -lt $MAX_WAIT ]; do
+        if curl -s http://localhost:$PORT > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ 服务启动成功 (PID: $real_pid)${NC}"
+            echo "📍 访问: http://localhost:$PORT"
+            echo "📋 日志: $LOG_FILE"
+            return 0
+        fi
+        if ! is_running "$real_pid"; then
+            echo -e "${RED}❌ 进程已退出${NC}"
+            echo "📋 查看日志: tail -f $LOG_FILE"
+            rm -f "$PID_FILE"
+            return 1
+        fi
+        sleep 2
+        waited=$((waited + 2))
+        printf "  ...%ds " "$waited"
+    done
+    
+    echo -e "${YELLOW}⚠️  服务可能仍在加载中（已等待 ${waited}s）${NC}"
+    echo "📋 查看日志: tail -f $LOG_FILE"
+    return 0
+}
+
+cmd_stop() {
+    echo "🛑 停止 IndexTTS2 WebUI..."
+    
+    local pid=$(get_pid)
+    if [ -n "$pid" ] && is_running "$pid"; then
+        echo "  杀死进程: $pid"
+        kill -TERM "$pid" 2>/dev/null || true
+        sleep 2
+        if is_running "$pid"; then
+            kill -9 "$pid" 2>/dev/null || true
+        fi
+        rm -f "$PID_FILE"
+        echo -e "${GREEN}✅ 服务已停止${NC}"
+    else
+        echo -e "${YELLOW}⚠️  PID 文件未运行${NC}"
+    fi
+    
+    # 彻底清理
+    cleanup_orphans
+}
+
+cmd_status() {
+    echo "📊 IndexTTS2 WebUI 状态"
+    echo "========================"
+    
+    local pid=$(get_pid)
+    
+    if [ -n "$pid" ] && is_running "$pid"; then
+        echo -e "${GREEN}✅ 运行中${NC}"
+        echo "PID: $pid"
+        echo "端口: $PORT"
+        echo "日志: $LOG_FILE"
+        
+        if curl -s http://localhost:$PORT > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ 健康检查通过${NC}"
+        else
+            echo -e "${YELLOW}⚠️  进程运行中但 HTTP 未就绪（可能在加载模型）${NC}"
+        fi
+    else
+        echo -e "${RED}❌ 未运行${NC}"
+        local orphans=$(pgrep -f "[p]ython.*server.py" || true)
+        if [ -n "$orphans" ]; then
+            echo -e "${YELLOW}⚠️  检测到孤儿进程:${NC}"
+            echo "$orphans" | while read -r opid; do
+                echo "  - $opid"
+            done
+        fi
+    fi
+}
+
+cmd_clean() {
+    echo "🧹 清理孤儿进程..."
+    cleanup_orphans
+}
+
+cmd_logs() {
+    if [ -f "$LOG_FILE" ]; then
+        tail -f "$LOG_FILE"
+    else
+        echo "📋 日志文件不存在: $LOG_FILE"
+    fi
+}
+
+main() {
+    case "${1:-status}" in
+        start)
+            cmd_start
+            ;;
+        stop)
+            cmd_stop
+            ;;
+        status)
+            cmd_status
+            ;;
+        clean)
+            cmd_clean
+            ;;
+        logs)
+            cmd_logs
+            ;;
+        restart)
+            cmd_stop
+            sleep 2
+            cmd_start
+            ;;
+        *)
+            echo "用法: idx {start|stop|status|clean|logs|restart}"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

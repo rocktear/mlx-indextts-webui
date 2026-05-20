@@ -1,0 +1,317 @@
+/* IndexTTS2 声音克隆 — 深色主题 */
+:root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --slider-track: #21262d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+h1 { font-size: 1.5em; margin-bottom: 24px; color: var(--accent); }
+h2 { font-size: 1em; margin-bottom: 12px; color: var(--text-dim); }
+
+section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+/* Row 1: Text */
+#section-text textarea {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+/* Row 2: Emotion + Parameters */
+#section-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+#emotion-panel select {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+#emotion-custom {
+    width: 100%;
+    background: var(--bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+}
+
+#emotion-custom.hidden { display: none; }
+#emotion-custom::placeholder { color: var(--text-dim); }
+
+.param-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.slider-group label {
+    font-size: 13px;
+    min-width: 56px;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+.slider-group input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    background: var(--slider-track);
+}
+
+.slider-group span {
+    font-size: 13px;
+    min-width: 36px;
+    text-align: right;
+    color: var(--accent);
+}
+
+/* Row 3: Output */
+#audio-player {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Output actions bar */
+#output-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+#save-npz-btn {
+    padding: 6px 16px;
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#save-npz-btn:hover { background: rgba(88, 166, 255, 0.15); }
+#save-npz-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#save-npz-status {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+#progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--slider-track);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#progress-bar.hidden { display: none; }
+
+#progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0;
+    transition: width 0.3s ease;
+    border-radius: 3px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+#progress-text {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+}
+
+/* Row 4: Input audio + Status + Generate */
+#section-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+/* Let grid stretch make all three boxes equal height */
+#input-audio-panel,
+#status-panel,
+#generate-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Unified black-box style for all three panels */
+#ref-box,
+#status-box,
+#generate-box {
+    background: var(--bg);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Status box keeps its layout */
+#status-box {
+    justify-content: flex-start;
+}
+
+/* Ref box centers its content */
+#ref-box {
+    justify-content: center;
+    align-items: center;
+}
+
+/* Generate box centers the button */
+#generate-box {
+    justify-content: center;
+    align-items: center;
+}
+
+/* Input audio */
+#ref-audio-file { display: none; }
+
+#ref-audio-label {
+    display: block;
+    text-align: center;
+    padding: 20px 8px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+#ref-audio-label:hover { color: var(--accent); }
+
+#ref-audio-name {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status text */
+#status-text {
+    color: var(--green);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+#params-table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+}
+
+#params-table td {
+    padding: 2px 8px;
+    color: var(--text-dim);
+}
+
+#params-table td:last-child {
+    text-align: right;
+    color: var(--text);
+}
+
+/* Generate button — 回字形：外框虚线，内按钮圆角居中 */
+#generate-btn {
+    width: auto;
+    padding: 18px 28px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+
+#generate-btn:hover { background: #4090e0; transform: scale(1.04); }
+#generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Examples */
+#examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.example-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.example-card:hover { border-color: var(--accent); }
+
+.example-card .emo { font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+.example-card .txt { font-size: 12px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Responsive */
+@media (max-width: 640px) {
+    #section-controls,
+    #section-bottom {
+        grid-template-columns: 1fr;
+    }
+}

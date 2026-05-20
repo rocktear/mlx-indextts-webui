@@ -1,61 +1,23 @@
+# IndexTTS2 WebUI - .gitignore
+# 临时生成文件
+outputs/
+
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+dist/
 
-# Virtual environments
+# 环境
 .venv/
 venv/
-ENV/
+.env
+
+# macOS
+.DS_Store
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-/models/
-ref_audios/
-*.safetensors
-*.pth
-*.pt
-*.npz
-/output*.wav
-/tmp/
-
-# Benchmark outputs
-test_outputs/
-benchmark_outputs/
-test_benchmark/
-.pytest_cache/
-.coverage
-htmlcov/
-
-# UV
-.python-version
-
-# Claude Code
-CLAUDE.md
-docs/

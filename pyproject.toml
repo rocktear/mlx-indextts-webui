@@ -30,6 +30,8 @@ dependencies = [
     "wetext>=0.1.2",
     "psutil>=7.2.2",
     "bigvgan>=2.4.1",
+    "einops>=0.8.2",
+    "gradio>=6.14.0",
 ]
 
 [project.optional-dependencies]
