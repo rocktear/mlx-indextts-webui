@@ -44,15 +44,15 @@ emotionSelect.addEventListener('change', () => {
 
 // Examples
 const examples = [
-    { text: '这是我为你精心准备的声音。希望你喜欢这个温柔的嗓音。', emotion: 'calm 平静', alpha: 0.6, tokens: 1500, speed: 1.0 },
-    { text: '今天真是太开心了！我们一起去庆祝吧！', emotion: 'happy 高兴', alpha: 0.7, tokens: 1500, speed: 1.0 },
+    { text: '这是我为你精心准备的声音。', emotion: 'calm 平静', alpha: 0.6, tokens: 1500, speed: 1.0 },
+    { text: '今天真是太开心了！一起去庆祝吧！', emotion: 'happy 高兴', alpha: 0.7, tokens: 1500, speed: 1.0 },
     { text: '有时候我会感到有点难过和失落。', emotion: 'sad 伤心', alpha: 0.6, tokens: 1500, speed: 1.0 },
-    { text: '你怎么敢这样对我！我很生气！', emotion: 'angry 愤怒', alpha: 0.8, tokens: 1500, speed: 1.0 },
-    { text: '我有点害怕，不知道会发生什么。', emotion: 'afraid 害怕', alpha: 0.6, tokens: 1500, speed: 1.0 },
+    { text: '你怎么敢这样对我！', emotion: 'angry 愤怒', alpha: 0.8, tokens: 1500, speed: 1.0 },
+    { text: '我有点害怕…不知道会发生什么。', emotion: 'afraid 害怕', alpha: 0.6, tokens: 1500, speed: 1.0 },
     { text: '这真是令人厌恶，我无法接受。', emotion: 'disgusted 厌恶', alpha: 0.7, tokens: 1500, speed: 1.0 },
     { text: '一切都显得那么沉闷和无趣。', emotion: 'melancholic 忧郁', alpha: 0.6, tokens: 1500, speed: 1.0 },
     { text: '哇！这真是太惊人了！', emotion: 'surprised 惊讶', alpha: 0.7, tokens: 1500, speed: 1.0 },
-    { text: '我有点开心，又有点紧张，这种感觉很奇妙。', emotion: 'mixed 混合情绪', alpha: 0.6, tokens: 1500, speed: 1.0, custom: 'happy:0.6,surprised:0.4' },
+    { text: '又开心又紧张，这种感觉很奇妙。', emotion: 'mixed 混合情绪', alpha: 0.6, tokens: 1500, speed: 1.0, custom: 'happy:0.6,surprised:0.4' },
 ];
 
 const examplesGrid = $('#examples-grid');
