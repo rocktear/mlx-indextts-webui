@@ -149,7 +149,8 @@ generateBtn.addEventListener('click', async () => {
         saveNpzStatus.textContent = '';
 
         statusText.textContent = '✅ 生成成功';
-        $('#param-emotion').textContent = emotionSelect.value.split(' ')[0];
+        const emoLabel = emotionCustom.value.trim() ? 'mixed' : emotionSelect.value.split(' ')[0];
+        $('#param-emotion').textContent = emoLabel;
         $('#param-alpha').textContent = emoAlpha.value;
         $('#param-tokens').textContent = `${maxTokens.value} tokens`;
         $('#param-speed').textContent = `${speed.value}x`;
